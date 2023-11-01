@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "leet-rank"
+version = "0.1.0"
+description = ""
+authors = ["kaliv0 <kaloyan.ivanov88@gmail.com>"]
+readme = "README.md"
+packages = [{include = "leet_rank"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+sqlalchemy = "^2.0.22"
+alembic = "^1.12.1"
+pydantic = "^2.4.2"
+psycopg = "^3.1.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
