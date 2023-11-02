@@ -1,26 +1,31 @@
+from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import Integer, String
+
 from db.database import Base
-from sqlalchemy import Column
 
 
-# class DbUser(Base):
-#   __tablename__ = 'users'
-#   id = Column(Integer, primary_key=True, index=True)
-#   username = Column(String)
-#   email = Column(String)
-#   password = Column(String)
-#   items = relationship('DbArticle', back_populates='user')
+class Task(Base):
+    __tablename__ = "tasks"
 
-# class DbArticle(Base):
-#   __tablename__= 'articles'
-#   id = Column(Integer, primary_key=True, index=True)
-#   title = Column(String)
-#   content = Column(String)
-#   published = Column(Boolean)
-#   user_id = Column(Integer, ForeignKey('users.id'))
-#   user = relationship("DbUser", back_populates='items')
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    description = relationship(
+        "TaskDescription",
+        back_populates="task",
+        cascade="all, delete",
+    )
+    test_data = relationship(
+        "TaskDescription", back_populates="task", cascade="all, delete"
+    )
+    # author's solution (optional)
+    # category (list?)
+    # tags
+    # tips
+    # difficulty level
+    # solutions
+    # author
+    # votes
 
 
 # class Image(Base):
@@ -40,7 +45,7 @@ class TaskDescription(DescriptionMixin, Base):
     __tablename__ = "task_descriptions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"))
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
     task = relationship("Task", back_populates="description")
     # task = relationship("Task", back_populates="description", backref=backref("items", cascade="all, delete-orphan"))
 
@@ -52,21 +57,22 @@ class TaskDescription(DescriptionMixin, Base):
 #     solution = relationship("Task", back_populates="description")
 
 
-class Task(Base):
-    __tablename__ = "tasks"
+class TestCase(Base):
+    __tablename__ = "test_cases"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    description = relationship(
-        "TaskDescription",
-        back_populates="task",
-        cascade="all, delete",
+    arguments = Column(String)  # TODO:
+    expected_result = Column(String)  # TODO:
+    test_data_id = Column(Integer, ForeignKey("test_data.id"), nullable=False)
+    test_data = relationship("TestData", back_populates="test_cases")
+
+
+class TestData(Base):
+    __tablename__ = "test_data"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    task = relationship("Task", back_populates="test_data")
+    test_cases = relationship(
+        "TestCase", back_populates="test_data", cascade="all, delete"
     )
-    # test data (IO for tests)
-    # author's solution (optional)
-    # category (list?)
-    # tags
-    # tips
-    # difficulty level
-    # solutions
-    # author
-    # votes
