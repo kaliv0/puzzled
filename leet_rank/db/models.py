@@ -1,7 +1,8 @@
+import enum
 from datetime import datetime
 from typing import List
 
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import String
@@ -29,14 +30,20 @@ class Task(Base):
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
-    tags = relationship("Tag", secondary="tasks_tags", back_populates="tasks")
+    tags: Mapped["Tag"] = relationship(
+        "Tag", secondary="tasks_tags", back_populates="tasks"
+    )  # TODO: add cascade delete
+    hints: Mapped[List["Hint"]] = relationship(
+        back_populates="task", cascade="all, delete"
+    )
+
     # =====================
     # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     # author = relationship("User", back_populates="tasks")
 
-    # tags -> many to many
-    # tips
-    # difficulty level
+    difficulty_level: Mapped[enum.Enum] = mapped_column(
+        ENUM("EASY", "MEDIUM", "HARD", name="difficulty_level")
+    )  # TODO: check if mapped correctly to enum.Enum
     # votes
 
 
@@ -46,9 +53,7 @@ class Solution(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
-    task: Mapped["Task"] = relationship(
-        back_populates="solutions", cascade="all, delete"
-    )
+    task: Mapped["Task"] = relationship(back_populates="solutions")
     # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     # author = relationship("User", back_populates="solutions")
     description: Mapped["SolutionDescription"] = relationship(
@@ -91,9 +96,7 @@ class SolutionDescription(DescriptionMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     solution_id: Mapped[int] = mapped_column(ForeignKey("solutions.id"), nullable=False)
-    solution: Mapped["Solution"] = relationship(
-        back_populates="description", cascade="all, delete"
-    )
+    solution: Mapped["Solution"] = relationship(back_populates="description")
     images: Mapped[List["SolutionDescriptionImage"]] = relationship(
         back_populates="solution_description", cascade="all, delete"
     )
@@ -119,9 +122,7 @@ class TaskDescriptionImage(ImageMixin, Base):
     task_description_id: Mapped[int] = mapped_column(
         ForeignKey("task_descriptions.id"), nullable=False
     )
-    task_description: Mapped["TaskDescription"] = relationship(
-        back_populates="images", cascade="all, delete"
-    )
+    task_description: Mapped["TaskDescription"] = relationship(back_populates="images")
 
 
 class SolutionDescriptionImage(ImageMixin, Base):
@@ -134,7 +135,7 @@ class SolutionDescriptionImage(ImageMixin, Base):
         ForeignKey("solution_descriptions.id"), nullable=False
     )
     solution_description: Mapped["SolutionDescription"] = relationship(
-        back_populates="images", cascade="all, delete"
+        back_populates="images"
     )
 
 
@@ -161,9 +162,7 @@ class TestCase(Base):
     test_data_id: Mapped[int] = mapped_column(
         ForeignKey("test_data.id"), nullable=False
     )
-    test_data: Mapped["TestData"] = relationship(
-        back_populates="test_cases", cascade="all, delete"
-    )
+    test_data: Mapped["TestData"] = relationship(back_populates="test_cases")
 
 
 #### Tags ####
@@ -184,4 +183,25 @@ class Tag(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     text: Mapped[str] = mapped_column(String, nullable=False)
-    tasks = relationship("Task", secondary="tasks_tags", back_populates="tags")
+    tasks: Mapped["Task"] = relationship(
+        "Task", secondary="tasks_tags", back_populates="tags"
+    )  # TODO: implement cascade delete
+
+
+#### ####
+
+
+class Hint(Base):
+    __tablename__ = "hints"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
+    task: Mapped["Task"] = relationship(back_populates="hints")
+
+
+# class DifficultyLevel(Base):
+#     __tablename__ = "difficulty_level"
+#
+#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+#     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
+#     task: Mapped["Task"] = relationship(back_populates="difficulty_level")
