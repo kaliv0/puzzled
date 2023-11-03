@@ -1,7 +1,8 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
 
 # SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://kaliv0:pass123@localhost:5432/leetdb"
 
