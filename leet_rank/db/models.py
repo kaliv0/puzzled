@@ -4,10 +4,11 @@ from typing import List
 
 from sqlalchemy.dialects.postgresql import ARRAY, ENUM
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy.sql.sqltypes import String
+from sqlalchemy.sql.schema import ForeignKey, CheckConstraint
+from sqlalchemy.sql.sqltypes import String, Integer
 
 
+# TODO: move back to database.py
 class Base(DeclarativeBase):
     pass
 
@@ -36,15 +37,14 @@ class Task(Base):
     hints: Mapped[List["Hint"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
-
-    # =====================
-    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # author = relationship("User", back_populates="tasks")
-
     difficulty_level: Mapped[enum.Enum] = mapped_column(
         ENUM("EASY", "MEDIUM", "HARD", name="difficulty_level")
-    )  # TODO: check if mapped correctly to enum.Enum
-    # votes
+    )  # TODO: check if mapped correctly to enum.Enum, refactor
+    votes: Mapped[List["Vote"]] = relationship(
+        back_populates="task", cascade="all, delete"
+    )
+    # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # author: Mapped["User"] = relationship(back_populates="tasks")
 
 
 class Solution(Base):
@@ -54,8 +54,8 @@ class Solution(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="solutions")
-    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # author = relationship("User", back_populates="solutions")
+    # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # author: Mapped["User"] = relationship(back_populates="solutions")
     description: Mapped["SolutionDescription"] = relationship(
         back_populates="solution", cascade="all, delete"
     )
@@ -66,7 +66,6 @@ class Solution(Base):
         onupdate=datetime.now(), nullable=False
     )
     content: Mapped[str] = mapped_column(String, nullable=False)
-    # language
     # votes
 
 
@@ -117,8 +116,8 @@ class TaskDescriptionImage(ImageMixin, Base):
     __tablename__ = "task_description_images"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # author = relationship("User", back_populates="solutions")
+    # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # author: Mapped["User"] = relationship(back_populates="task_description_images")
     task_description_id: Mapped[int] = mapped_column(
         ForeignKey("task_descriptions.id"), nullable=False
     )
@@ -129,8 +128,8 @@ class SolutionDescriptionImage(ImageMixin, Base):
     __tablename__ = "solution_description_images"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # author = relationship("User", back_populates="solutions")
+    # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # author: Mapped["User"] = relationship(back_populates="solution_description_images")
     solution_description_id: Mapped[int] = mapped_column(
         ForeignKey("solution_descriptions.id"), nullable=False
     )
@@ -199,9 +198,18 @@ class Hint(Base):
     task: Mapped["Task"] = relationship(back_populates="hints")
 
 
-# class DifficultyLevel(Base):
-#     __tablename__ = "difficulty_level"
-#
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
-#     task: Mapped["Task"] = relationship(back_populates="difficulty_level")
+class Vote(Base):
+    __tablename__ = "votes"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    stars_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
+    task: Mapped["Task"] = relationship(back_populates="votes")
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # user: Mapped["User"] = relationship(back_populates="votes")
+
+    __table_args__ = (
+        CheckConstraint("0 <= stars_count <= 5", name="check_min_stars_count"),
+        # CheckConstraint(stars_count <= 5, name="check_max_stars_count"),
+        {},
+    )  # TODO: combine checks if possible
