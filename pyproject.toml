@@ -15,6 +15,7 @@ alembic = "^1.12.1"
 pydantic = "^2.4.2"
 psycopg = "^3.1.12"
 black = "^23.10.1"
+python-dotenv = "^1.0.0"
 
 
 [build-system]
