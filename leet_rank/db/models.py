@@ -15,6 +15,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped["TaskDescription"] = relationship(
         back_populates="task",
         cascade="all, delete",
@@ -28,12 +29,12 @@ class Task(Base):
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
+    tags = relationship("Tag", secondary="tasks_tags", back_populates="tasks")
     # =====================
     # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     # author = relationship("User", back_populates="tasks")
 
-    # category (list?)
-    # tags
+    # tags -> many to many
     # tips
     # difficulty level
     # votes
@@ -43,6 +44,7 @@ class Solution(Base):
     __tablename__ = "solutions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(
         back_populates="solutions", cascade="all, delete"
@@ -101,6 +103,7 @@ class SolutionDescription(DescriptionMixin, Base):
 
 
 class ImageMixin(object):
+    name: Mapped[str] = mapped_column(String, nullable=False)
     # content: Mapped(File) = mapped_column(nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
         default=datetime.now(), nullable=False
@@ -161,3 +164,24 @@ class TestCase(Base):
     test_data: Mapped["TestData"] = relationship(
         back_populates="test_cases", cascade="all, delete"
     )
+
+
+#### Tags ####
+
+
+class TasksTagsAssociation(Base):
+    __tablename__ = "tasks_tags"
+
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id"), primary_key=True)
+    # extra_data: Mapped[Optional[str]]
+    task: Mapped["Task"] = relationship(back_populates="tags")
+    tag: Mapped["Tag"] = relationship(back_populates="tasks")
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    text: Mapped[str] = mapped_column(String, nullable=False)
+    tasks = relationship("Task", secondary="tasks_tags", back_populates="tags")
