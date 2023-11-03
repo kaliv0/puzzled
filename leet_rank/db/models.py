@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Column
-
-# from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy.sql.sqltypes import DateTime, Integer, String
+from sqlalchemy.sql.sqltypes import String
 
-from leet_rank.db.database import Base
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Task(Base):
@@ -19,8 +19,12 @@ class Task(Base):
         back_populates="task",
         cascade="all, delete",
     )
-    test_data: Mapped["TestData"] = relationship(back_populates="task", cascade="all, delete")
-    author_solution: Mapped["Solution"] = relationship(back_populates="task", cascade="all, delete")
+    test_data: Mapped["TestData"] = relationship(
+        back_populates="task", cascade="all, delete"
+    )
+    author_solution: Mapped["Solution"] = relationship(
+        back_populates="task", cascade="all, delete"
+    )
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
@@ -40,37 +44,33 @@ class Solution(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
-    task: Mapped["Task"] = relationship(back_populates="solutions", cascade="all, delete")
+    task: Mapped["Task"] = relationship(
+        back_populates="solutions", cascade="all, delete"
+    )
     # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     # author = relationship("User", back_populates="solutions")
     description: Mapped["SolutionDescription"] = relationship(
         back_populates="solution", cascade="all, delete"
     )
-    create_date: Mapped[DateTime] = mapped_column(
+    create_date: Mapped[datetime] = mapped_column(
         default=datetime.now(), nullable=False
     )  # TODO: verify
-    last_modified: Mapped[DateTime] = mapped_column(onupdate=datetime.now(), nullable=False)
-    content: Mapped[String] = mapped_column(nullable=False)
+    last_modified: Mapped[datetime] = mapped_column(
+        onupdate=datetime.now(), nullable=False
+    )
+    content: Mapped[str] = mapped_column(String, nullable=False)
     # language
     # votes
-
-
-class Image(Base):
-    __tablename__ = "images"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    # content = Column(File??)
-    upload_date = Column(DateTime, default=datetime.now())  # TODO: verify
-    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    # author = relationship("User", back_populates="solutions")
 
 
 #### Descriptions ####
 
 
 class DescriptionMixin(object):
-    text: Mapped[String] = mapped_column()
-    links: Mapped[List[String]] = mapped_column()  # TODO: verify with real test data in db
+    text: Mapped[str] = mapped_column(String, nullable=False)
+    links: Mapped[List[str]] = mapped_column(
+        ARRAY(String)
+    )  # TODO: verify with real test data in db
 
 
 class TaskDescription(DescriptionMixin, Base):
@@ -79,7 +79,9 @@ class TaskDescription(DescriptionMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="description")
-    # images = relationship("Image", back_populates="task_description", cascade="all, delete")
+    images: Mapped[List["TaskDescriptionImage"]] = relationship(
+        back_populates="task_description", cascade="all, delete"
+    )
 
 
 class SolutionDescription(DescriptionMixin, Base):
@@ -87,10 +89,50 @@ class SolutionDescription(DescriptionMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     solution_id: Mapped[int] = mapped_column(ForeignKey("solutions.id"), nullable=False)
-    solution: Mapped["Solution"] = relationship(back_populates="description", cascade="all, delete")
-    # images = relationship(
-    #     "Image", back_populates="solution_description", cascade="all, delete"
-    # )
+    solution: Mapped["Solution"] = relationship(
+        back_populates="description", cascade="all, delete"
+    )
+    images: Mapped[List["SolutionDescriptionImage"]] = relationship(
+        back_populates="solution_description", cascade="all, delete"
+    )
+
+
+#### Images ####
+
+
+class ImageMixin(object):
+    # content: Mapped(File) = mapped_column(nullable=False)
+    upload_date: Mapped[datetime] = mapped_column(
+        default=datetime.now(), nullable=False
+    )  # TODO: verify
+
+
+class TaskDescriptionImage(ImageMixin, Base):
+    __tablename__ = "task_description_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # author = relationship("User", back_populates="solutions")
+    task_description_id: Mapped[int] = mapped_column(
+        ForeignKey("task_descriptions.id"), nullable=False
+    )
+    task_description: Mapped["TaskDescription"] = relationship(
+        back_populates="images", cascade="all, delete"
+    )
+
+
+class SolutionDescriptionImage(ImageMixin, Base):
+    __tablename__ = "solution_description_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # author_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    # author = relationship("User", back_populates="solutions")
+    solution_description_id: Mapped[int] = mapped_column(
+        ForeignKey("solution_descriptions.id"), nullable=False
+    )
+    solution_description: Mapped["SolutionDescription"] = relationship(
+        back_populates="images", cascade="all, delete"
+    )
 
 
 #### Testing ####
@@ -111,7 +153,11 @@ class TestCase(Base):
     __tablename__ = "test_cases"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    arguments: Mapped[String] = mapped_column(nullable=False)  # TODO:
-    expected_result: Mapped[String] = mapped_column(nullable=False)  # TODO:
-    test_data_id: Mapped[int] = mapped_column(ForeignKey("test_data.id"), nullable=False)
-    test_data: Mapped["TestData"] = relationship(back_populates="test_cases", cascade="all, delete")
+    arguments: Mapped[str] = mapped_column(String, nullable=False)  # TODO:
+    expected_result: Mapped[str] = mapped_column(String, nullable=False)  # TODO:
+    test_data_id: Mapped[int] = mapped_column(
+        ForeignKey("test_data.id"), nullable=False
+    )
+    test_data: Mapped["TestData"] = relationship(
+        back_populates="test_cases", cascade="all, delete"
+    )
