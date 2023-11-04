@@ -17,7 +17,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from leet_rank.db.models import Base
+from app.db.models import Base
 
 target_metadata = [Base.metadata]
 

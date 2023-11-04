@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from leet_rank.db import models
-from leet_rank.db.database import engine
+from app.db import models
+from app.db.database import engine
 
 app = FastAPI()
 

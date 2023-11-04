@@ -40,7 +40,7 @@ class Task(Base):
     difficulty_level: Mapped[enum.Enum] = mapped_column(
         ENUM("EASY", "MEDIUM", "HARD", name="difficulty_level")
     )  # TODO: check if mapped correctly to enum.Enum, refactor
-    votes: Mapped[List["Vote"]] = relationship(
+    votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
     # author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
@@ -66,7 +66,9 @@ class Solution(Base):
         onupdate=datetime.now(), nullable=False
     )
     content: Mapped[str] = mapped_column(String, nullable=False)
-    # votes
+    votes: Mapped[List["SolutionVote"]] = relationship(
+        back_populates="solution", cascade="all, delete"
+    )
 
 
 #### Descriptions ####
@@ -187,7 +189,7 @@ class Tag(Base):
     )  # TODO: implement cascade delete
 
 
-#### ####
+#### Hints ####
 
 
 class Hint(Base):
@@ -198,18 +200,41 @@ class Hint(Base):
     task: Mapped["Task"] = relationship(back_populates="hints")
 
 
-class Vote(Base):
-    __tablename__ = "votes"
+#### Votes ####
+
+
+class VoteMixin(object):
+    stars_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class TaskVote(VoteMixin, Base):
+    __tablename__ = "task_votes"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    stars_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="votes")
     # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     # user: Mapped["User"] = relationship(back_populates="votes")
 
     __table_args__ = (
-        CheckConstraint("0 <= stars_count <= 5", name="check_min_stars_count"),
-        # CheckConstraint(stars_count <= 5, name="check_max_stars_count"),
+        CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
+        CheckConstraint("stars_count <= 5", name="check_max_stars_count"),
         {},
-    )  # TODO: combine checks if possible
+    )  # TODO: move to mixin??
+
+
+class SolutionVote(VoteMixin, Base):
+    __tablename__ = "solution_votes"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    stars_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    solution_id: Mapped[int] = mapped_column(ForeignKey("solutions.id"), nullable=False)
+    solution: Mapped["Solution"] = relationship(back_populates="votes")
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # user: Mapped["User"] = relationship(back_populates="votes")
+
+    __table_args__ = (
+        CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
+        CheckConstraint("stars_count <= 5", name="check_max_stars_count"),
+        {},
+    )  # TODO: move to mixin?

@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["kaliv0 <kaloyan.ivanov88@gmail.com>"]
 readme = "README.md"
-packages = [{include = "leet_rank"}]
+packages = [{include = "app"}] # TODO: check
 
 [tool.poetry.dependencies]
 python = "^3.10"
