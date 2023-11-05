@@ -51,16 +51,18 @@ class Task(Base):
         back_populates="task", cascade="all, delete"
     )
     difficulty_level: Mapped[enum.Enum] = mapped_column(
-        ENUM("EASY", "MEDIUM", "HARD", name="difficulty_level")
-    )  # TODO: check if mapped correctly to enum.Enum, refactor
+        ENUM(
+            "EASY", "MEDIUM", "HARD", name="difficulty_levels"
+        )  # TODO: extract as separate table, check if mapped correctly to enum.Enum
+    )
     votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
-    # author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # author: Mapped["User"] = relationship(back_populates="tasks")
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    author: Mapped["User"] = relationship(back_populates="tasks")
 
 
-#### Solutions ####
+# #### Solutions ####
 
 
 class Solution(Base):
@@ -70,8 +72,8 @@ class Solution(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="solutions")
-    # author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # author: Mapped["User"] = relationship(back_populates="solutions")
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    author: Mapped["User"] = relationship(back_populates="solutions")
     description: Mapped["SolutionDescription"] = relationship(
         back_populates="solution", cascade="all, delete"
     )
@@ -91,7 +93,7 @@ class Solution(Base):
     )
 
 
-#### Descriptions ####
+# #### Descriptions ####
 
 
 class DescriptionMixin(object):
@@ -125,11 +127,11 @@ class SolutionDescription(DescriptionMixin, Base):
     )
 
 
-#### Images ####
+# #### Images ####
 
 
 class ImageMixin(object):
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)  # TODO: decide if needed?
     # content: Mapped(File) = mapped_column(nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
         # default=datetime.now(), nullable=False
@@ -142,8 +144,6 @@ class TaskDescriptionImage(ImageMixin, Base):
     __tablename__ = "task_description_images"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    # author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # author: Mapped["User"] = relationship(back_populates="task_description_images")
     task_description_id: Mapped[UUID] = mapped_column(
         ForeignKey("task_descriptions.id"), nullable=False
     )
@@ -154,8 +154,6 @@ class SolutionDescriptionImage(ImageMixin, Base):
     __tablename__ = "solution_description_images"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    # author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # author: Mapped["User"] = relationship(back_populates="solution_description_images")
     solution_description_id: Mapped[UUID] = mapped_column(
         ForeignKey("solution_descriptions.id"), nullable=False
     )
@@ -164,7 +162,15 @@ class SolutionDescriptionImage(ImageMixin, Base):
     )
 
 
-#### Testing ####
+class ProfileImage(ImageMixin, Base):
+    __tablename__ = "profile_images"
+
+    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="profile_picture")
+
+
+# #### Testing ####
 
 
 class TestData(Base):
@@ -190,7 +196,7 @@ class TestCase(Base):
     test_data: Mapped["TestData"] = relationship(back_populates="test_cases")
 
 
-#### Tags ####
+# #### Tags ####
 
 
 class TasksTagsAssociation(Base):
@@ -213,7 +219,7 @@ class Tag(Base):
     )  # TODO: implement cascade delete
 
 
-#### Hints ####
+# #### Hints ####
 
 
 class Hint(Base):
@@ -224,7 +230,7 @@ class Hint(Base):
     task: Mapped["Task"] = relationship(back_populates="hints")
 
 
-#### Votes ####
+# #### Votes ####
 
 
 class VoteMixin(object):
@@ -237,8 +243,8 @@ class TaskVote(VoteMixin, Base):
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
     task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="votes")
-    # user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # user: Mapped["User"] = relationship(back_populates="votes")
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="task_votes")
 
     __table_args__ = (
         CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
@@ -256,8 +262,8 @@ class SolutionVote(VoteMixin, Base):
         ForeignKey("solutions.id"), nullable=False
     )
     solution: Mapped["Solution"] = relationship(back_populates="votes")
-    # user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # user: Mapped["User"] = relationship(back_populates="votes")
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="solution_votes")
 
     __table_args__ = (
         CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
@@ -266,4 +272,47 @@ class SolutionVote(VoteMixin, Base):
     )  # TODO: move to mixin?
 
 
-#### Users ####
+# #### Users ####
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
+    full_name: Mapped[str] = mapped_column(
+        String
+    )  # nullable by default # TODO: decide for max length
+    nickname: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # TODO: decide for max length
+    email: Mapped[str] = mapped_column(String)  # TODO: check if should be string
+    profile_picture: Mapped[ProfileImage] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
+    about: Mapped[str] = mapped_column(String)  # TODO: decide for max length
+    join_date: Mapped[datetime] = mapped_column(
+        # default=datetime.now(), nullable=False
+        insert_default=func.utc_timestamp(),
+        nullable=False,
+    )  # TODO: verify
+    last_login: Mapped[datetime] = mapped_column(
+        insert_default=func.utc_timestamp(),
+        nullable=False,
+    )
+    task_stars_received: Mapped[int] = mapped_column(Integer, default=0)
+    solution_stars_received: Mapped[int] = mapped_column(Integer, default=0)
+    solutions: Mapped[List["Solution"]] = relationship(
+        back_populates="author", cascade="all, delete"
+    )  # TODO: decide if after deleting user his solutions and tasks should be kept with null author
+    tasks: Mapped[List["Task"]] = relationship(
+        back_populates="author", cascade="all, delete"
+    )
+    task_votes: Mapped[List["TaskVote"]] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
+    solution_votes: Mapped[List["SolutionVote"]] = relationship(
+        back_populates="user", cascade="all, delete"
+    )
+    role: Mapped[enum.Enum] = mapped_column(
+        ENUM("USER", "STAFF", "ADMIN", name="user_roles")
+    )  # TODO: extract as separate table

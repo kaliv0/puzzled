@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 17cbd7131072
+Revision ID: ad9c0f40d6df
 Revises: 
-Create Date: 2023-11-04 15:51:42.250908
+Create Date: 2023-11-05 12:42:10.415037
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '17cbd7131072'
+revision: str = 'ad9c0f40d6df'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,10 +25,33 @@ def upgrade() -> None:
     sa.Column('text', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('users',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('full_name', sa.String(), nullable=False),
+    sa.Column('nickname', sa.String(), nullable=False),
+    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('about', sa.String(), nullable=False),
+    sa.Column('join_date', sa.DateTime(), nullable=False),
+    sa.Column('last_login', sa.DateTime(), nullable=False),
+    sa.Column('task_stars_received', sa.Integer(), nullable=False),
+    sa.Column('solution_stars_received', sa.Integer(), nullable=False),
+    sa.Column('role', postgresql.ENUM('USER', 'STAFF', 'ADMIN', name='user_roles'), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('profile_images',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('upload_date', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('tasks',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('difficulty_level', postgresql.ENUM('EASY', 'MEDIUM', 'HARD', name='difficulty_level'), nullable=False),
+    sa.Column('difficulty_level', postgresql.ENUM('EASY', 'MEDIUM', 'HARD', name='difficulty_levels'), nullable=False),
+    sa.Column('author_id', sa.Uuid(), nullable=False),
+    sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('hints',
@@ -41,9 +64,11 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('task_id', sa.Uuid(), nullable=False),
+    sa.Column('author_id', sa.Uuid(), nullable=False),
     sa.Column('create_date', sa.DateTime(), nullable=False),
     sa.Column('last_modified', sa.DateTime(), nullable=False),
     sa.Column('content', sa.String(), nullable=False),
+    sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -58,10 +83,12 @@ def upgrade() -> None:
     op.create_table('task_votes',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('task_id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('stars_count', sa.Integer(), nullable=False),
     sa.CheckConstraint('stars_count <= 5', name='check_max_stars_count'),
     sa.CheckConstraint('stars_count >= 0', name='check_min_stars_count'),
     sa.ForeignKeyConstraint(['task_id'], ['tasks.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('tasks_tags',
@@ -89,9 +116,11 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('stars_count', sa.Integer(), nullable=False),
     sa.Column('solution_id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.CheckConstraint('stars_count <= 5', name='check_max_stars_count'),
     sa.CheckConstraint('stars_count >= 0', name='check_min_stars_count'),
     sa.ForeignKeyConstraint(['solution_id'], ['solutions.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('task_description_images',
@@ -135,5 +164,7 @@ def downgrade() -> None:
     op.drop_table('solutions')
     op.drop_table('hints')
     op.drop_table('tasks')
+    op.drop_table('profile_images')
+    op.drop_table('users')
     op.drop_table('tags')
     # ### end Alembic commands ###
