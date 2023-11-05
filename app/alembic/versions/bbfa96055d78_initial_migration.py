@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: e7743612b055
+Revision ID: bbfa96055d78
 Revises: 
-Create Date: 2023-11-05 14:28:14.237515
+Create Date: 2023-11-05 19:05:36.020275
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'e7743612b055'
+revision: str = 'bbfa96055d78'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -35,7 +35,7 @@ def upgrade() -> None:
     sa.Column('last_login', sa.DateTime(), nullable=False),
     sa.Column('task_stars_received', sa.Integer(), nullable=False),
     sa.Column('solution_stars_received', sa.Integer(), nullable=False),
-    sa.Column('role', sa.Enum('USER', 'STAFF', 'ADMIN', name='user_roles'), nullable=False),
+    sa.Column('role', sa.Enum('user', 'staff', 'admin', name='user_roles'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('profile_images',
@@ -49,7 +49,7 @@ def upgrade() -> None:
     op.create_table('tasks',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
-    sa.Column('difficulty_level', sa.Enum('EASY', 'MEDIUM', 'HARD', name='difficulty_levels'), nullable=False),
+    sa.Column('difficulty_level', sa.Enum('easy', 'medium', 'hard', name='difficulty_levels'), nullable=False),
     sa.Column('author_id', sa.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

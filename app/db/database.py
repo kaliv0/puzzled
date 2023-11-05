@@ -1,12 +1,12 @@
 import os
+from os.path import dirname, join
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://kaliv0:pass123@localhost:5432/leetdb"
-
-load_dotenv()
+dotenv_path = join(dirname(__file__), ".env")
+load_dotenv(dotenv_path)
 SQLALCHEMY_DATABASE_URL = os.getenv("DB_URL")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

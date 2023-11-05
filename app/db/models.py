@@ -1,30 +1,32 @@
 import enum
 from datetime import datetime
-from typing import List, Literal, get_args
+from typing import List
 from uuid import UUID, uuid4
 
-from sqlalchemy import types, func
+from sqlalchemy import func, types
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship,
-)
-from sqlalchemy.sql.schema import ForeignKey, CheckConstraint
-from sqlalchemy.sql.sqltypes import String, Integer, Enum
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.sql.schema import CheckConstraint, ForeignKey
+from sqlalchemy.sql.sqltypes import Enum, Integer, String
 
 
-# TODO: move back to database.py, decide for dataclass
-# class Base(MappedAsDataclass, DeclarativeBase):
 class Base(DeclarativeBase):
     pass
 
 
 # #### Enums ####
 
-DifficultyLevel = Literal["EASY", "MEDIUM", "HARD"]
-Role = Literal["USER", "STAFF", "ADMIN"]
+
+class DifficultyLevel(str, enum.Enum):
+    easy = "EASY"
+    medium = "MEDIUM"
+    hard = "HARD"
+
+
+class Role(str, enum.Enum):
+    user = "USER"
+    staff = "STAFF"
+    admin = "ADMIN"
 
 
 # #### Tasks ####
@@ -36,8 +38,7 @@ class Task(Base):
     id: Mapped[UUID] = mapped_column(
         types.Uuid,
         primary_key=True,
-        default=uuid4  # TODO: test if it's working properly
-        # server_default=text("gen_random_uuid()"),
+        default=uuid4,  # TODO: test if it's working properly
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped["TaskDescription"] = relationship(
@@ -60,7 +61,7 @@ class Task(Base):
         back_populates="task", cascade="all, delete"
     )
     difficulty_level: Mapped[enum.Enum] = mapped_column(
-        Enum(*get_args(DifficultyLevel), name="difficulty_levels")
+        Enum(DifficultyLevel, name="difficulty_levels")
     )
     votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
@@ -320,4 +321,4 @@ class User(Base):
     solution_votes: Mapped[List["SolutionVote"]] = relationship(
         back_populates="user", cascade="all, delete"
     )
-    role: Mapped[Role] = mapped_column(Enum(*get_args(Role), name="user_roles"))
+    role: Mapped[Role] = mapped_column(Enum(Role, name="user_roles"))

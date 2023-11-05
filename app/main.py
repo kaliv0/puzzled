@@ -7,8 +7,6 @@ from app.db.database import engine
 
 app = FastAPI()
 
-# app.include_router(post.router)
-
 models.Base.metadata.create_all(engine)
 
 origins = ["http://localhost:3000", "http://localhost:3001"]
