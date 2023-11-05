@@ -1,10 +1,10 @@
 import enum
 from datetime import datetime
-from typing import List
+from typing import List, Literal, get_args
 from uuid import UUID, uuid4
 
 from sqlalchemy import types, func
-from sqlalchemy.dialects.postgresql import ARRAY, ENUM
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -12,13 +12,22 @@ from sqlalchemy.orm import (
     relationship,
 )
 from sqlalchemy.sql.schema import ForeignKey, CheckConstraint
-from sqlalchemy.sql.sqltypes import String, Integer
+from sqlalchemy.sql.sqltypes import String, Integer, Enum
 
 
 # TODO: move back to database.py, decide for dataclass
 # class Base(MappedAsDataclass, DeclarativeBase):
 class Base(DeclarativeBase):
     pass
+
+
+# #### Enums ####
+
+DifficultyLevel = Literal["EASY", "MEDIUM", "HARD"]
+Role = Literal["USER", "STAFF", "ADMIN"]
+
+
+# #### Tasks ####
 
 
 class Task(Base):
@@ -51,9 +60,7 @@ class Task(Base):
         back_populates="task", cascade="all, delete"
     )
     difficulty_level: Mapped[enum.Enum] = mapped_column(
-        ENUM(
-            "EASY", "MEDIUM", "HARD", name="difficulty_levels"
-        )  # TODO: extract as separate table, check if mapped correctly to enum.Enum
+        Enum(*get_args(DifficultyLevel), name="difficulty_levels")
     )
     votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
@@ -313,6 +320,4 @@ class User(Base):
     solution_votes: Mapped[List["SolutionVote"]] = relationship(
         back_populates="user", cascade="all, delete"
     )
-    role: Mapped[enum.Enum] = mapped_column(
-        ENUM("USER", "STAFF", "ADMIN", name="user_roles")
-    )  # TODO: extract as separate table
+    role: Mapped[Role] = mapped_column(Enum(*get_args(Role), name="user_roles"))
