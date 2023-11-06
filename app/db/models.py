@@ -3,11 +3,12 @@ from datetime import datetime
 from typing import List
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, types
+from fastapi import UploadFile
+from sqlalchemy import types
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import CheckConstraint, ForeignKey
-from sqlalchemy.sql.sqltypes import Enum, Integer, String
+from sqlalchemy.sql.sqltypes import Enum, Integer, LargeBinary, String
 
 
 class Base(DeclarativeBase):
@@ -38,7 +39,7 @@ class Task(Base):
     id: Mapped[UUID] = mapped_column(
         types.Uuid,
         primary_key=True,
-        default=uuid4,  # TODO: test if it's working properly
+        default=uuid4,
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped["TaskDescription"] = relationship(
@@ -86,15 +87,13 @@ class Solution(Base):
         back_populates="solution", cascade="all, delete"
     )
     create_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     last_modified: Mapped[datetime] = mapped_column(
-        # onupdate=datetime.now(), nullable=False
-        onupdate=func.utc_timestamp(),
+        onupdate=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     content: Mapped[str] = mapped_column(String, nullable=False)
     votes: Mapped[List["SolutionVote"]] = relationship(
         back_populates="solution", cascade="all, delete"
@@ -140,12 +139,11 @@ class SolutionDescription(DescriptionMixin, Base):
 
 class ImageMixin(object):
     name: Mapped[str] = mapped_column(String, nullable=False)  # TODO: decide if needed?
-    # content: Mapped(File) = mapped_column(nullable=False)
+    content: Mapped[UploadFile] = mapped_column(LargeBinary, nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
 
 
 class TaskDescriptionImage(ImageMixin, Base):
@@ -174,8 +172,9 @@ class ProfileImage(ImageMixin, Base):
     __tablename__ = "profile_images"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    user: Mapped["User"] = relationship(back_populates="profile_picture")
+    # TODO: bring back after fixing seeding
+    # user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # user: Mapped["User"] = relationship(back_populates="profile_picture")
 
 
 # #### Testing ####
@@ -212,7 +211,7 @@ class TasksTagsAssociation(Base):
 
     task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
     tag_id: Mapped[UUID] = mapped_column(ForeignKey("tags.id"), primary_key=True)
-    # extra_data: Mapped[Optional[str]]
+    # extra_data: Mapped[Optional[str]] #TODO: clean up?
     task: Mapped["Task"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="tasks")
 
@@ -299,12 +298,11 @@ class User(Base):
     )
     about: Mapped[str] = mapped_column(String)  # TODO: decide for max length
     join_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     last_login: Mapped[datetime] = mapped_column(
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
     )
     task_stars_received: Mapped[int] = mapped_column(Integer, default=0)
