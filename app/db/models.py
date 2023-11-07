@@ -172,9 +172,8 @@ class ProfileImage(ImageMixin, Base):
     __tablename__ = "profile_images"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    # TODO: bring back after fixing seeding
-    # user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
-    # user: Mapped["User"] = relationship(back_populates="profile_picture")
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="profile_picture")
 
 
 # #### Testing ####
