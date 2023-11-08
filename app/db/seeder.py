@@ -1,4 +1,5 @@
-import uuid
+from datetime import datetime
+from uuid import uuid4
 from os.path import join, dirname
 
 from app.db.database import engine
@@ -8,7 +9,9 @@ from app.db.models import Base, DifficultyLevel, Role
 # file = join(dirname(__file__), "kitty.jpg")
 # pic = open(file, "rb").read()
 
-MODEL_IDS = {"user_id": uuid.uuid4(), "task_id": uuid.uuid4()}
+# TODO remove after fixing last_modified column
+current_timestamp = (datetime.utcnow(),)
+MODEL_IDS = {"user_id": uuid4(), "task_id": uuid4(), "solution_id": uuid4()}
 
 INITIAL_DATA = {
     # "profile_images": [
@@ -38,7 +41,22 @@ INITIAL_DATA = {
             "author_id": MODEL_IDS["user_id"],
         }
     ],
-    # "solutions": [],
+    "solutions": [
+        {
+            "id": MODEL_IDS["solution_id"],
+            "name": "200 % faster implementation",  # TODO: remove?
+            "task_id": MODEL_IDS["task_id"],
+            "author_id": MODEL_IDS["user_id"],
+            "description": "Simply use + operator",
+            "create_date": current_timestamp,
+            "last_modified": current_timestamp,
+            "content": """
+def add_nums(a: int, b: int) -> int:
+    return a + b
+""",  # TODO: extract as variable
+            "votes": 0,
+        }
+    ],
     # "task_descriptions": [],
     # "solution_descriptions": [],
     # "task_description_images": [],

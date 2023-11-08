@@ -49,9 +49,11 @@ class Task(Base):
     test_data: Mapped["TestData"] = relationship(
         back_populates="task", cascade="all, delete"
     )
+    # TODO: remove and calculate inside responseDto?
     author_solution: Mapped["Solution"] = relationship(
         back_populates="task", cascade="all, delete"
     )
+    # TODO: should exclude author's solution if author's solution is kept?
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
@@ -78,7 +80,7 @@ class Solution(Base):
     __tablename__ = "solutions"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)  # TODO: remove?
     task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     task: Mapped["Task"] = relationship(back_populates="solutions")
     author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
@@ -92,6 +94,7 @@ class Solution(Base):
     )
     last_modified: Mapped[datetime] = mapped_column(
         onupdate=datetime.utcnow(),
+        # TODO: make nullable or align initial value with create_date?
         nullable=False,
     )
     content: Mapped[str] = mapped_column(String, nullable=False)
