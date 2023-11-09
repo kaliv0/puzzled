@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: bbfa96055d78
+Revision ID: 49c81d5938d3
 Revises: 
-Create Date: 2023-11-05 19:05:36.020275
+Create Date: 2023-11-09 13:27:22.066302
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'bbfa96055d78'
+revision: str = '49c81d5938d3'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -42,6 +42,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('content', sa.LargeBinary(), nullable=False),
     sa.Column('upload_date', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -114,9 +115,9 @@ def upgrade() -> None:
     )
     op.create_table('solution_votes',
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('stars_count', sa.Integer(), nullable=False),
     sa.Column('solution_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('stars_count', sa.Integer(), nullable=False),
     sa.CheckConstraint('stars_count <= 5', name='check_max_stars_count'),
     sa.CheckConstraint('stars_count >= 0', name='check_min_stars_count'),
     sa.ForeignKeyConstraint(['solution_id'], ['solutions.id'], ),
@@ -127,6 +128,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('task_description_id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('content', sa.LargeBinary(), nullable=False),
     sa.Column('upload_date', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['task_description_id'], ['task_descriptions.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -143,6 +145,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('solution_description_id', sa.Uuid(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('content', sa.LargeBinary(), nullable=False),
     sa.Column('upload_date', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['solution_description_id'], ['solution_descriptions.id'], ),
     sa.PrimaryKeyConstraint('id')

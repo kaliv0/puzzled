@@ -3,11 +3,12 @@ from datetime import datetime
 from typing import List
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, types
+from fastapi import UploadFile
+from sqlalchemy import types
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import CheckConstraint, ForeignKey
-from sqlalchemy.sql.sqltypes import Enum, Integer, String
+from sqlalchemy.sql.sqltypes import Enum, Integer, LargeBinary, String
 
 
 class Base(DeclarativeBase):
@@ -38,7 +39,7 @@ class Task(Base):
     id: Mapped[UUID] = mapped_column(
         types.Uuid,
         primary_key=True,
-        default=uuid4,  # TODO: test if it's working properly
+        default=uuid4,
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped["TaskDescription"] = relationship(
@@ -46,9 +47,6 @@ class Task(Base):
         cascade="all, delete",
     )
     test_data: Mapped["TestData"] = relationship(
-        back_populates="task", cascade="all, delete"
-    )
-    author_solution: Mapped["Solution"] = relationship(
         back_populates="task", cascade="all, delete"
     )
     user_solutions: Mapped[List["Solution"]] = relationship(
@@ -86,15 +84,14 @@ class Solution(Base):
         back_populates="solution", cascade="all, delete"
     )
     create_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     last_modified: Mapped[datetime] = mapped_column(
-        # onupdate=datetime.now(), nullable=False
-        onupdate=func.utc_timestamp(),
+        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
+        onupdate=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     content: Mapped[str] = mapped_column(String, nullable=False)
     votes: Mapped[List["SolutionVote"]] = relationship(
         back_populates="solution", cascade="all, delete"
@@ -106,9 +103,7 @@ class Solution(Base):
 
 class DescriptionMixin(object):
     text: Mapped[str] = mapped_column(String, nullable=False)
-    links: Mapped[List[str]] = mapped_column(
-        ARRAY(String)
-    )  # TODO: verify with real test data in db
+    links: Mapped[List[str]] = mapped_column(ARRAY(String), default=[])
 
 
 class TaskDescription(DescriptionMixin, Base):
@@ -139,13 +134,12 @@ class SolutionDescription(DescriptionMixin, Base):
 
 
 class ImageMixin(object):
-    name: Mapped[str] = mapped_column(String, nullable=False)  # TODO: decide if needed?
-    # content: Mapped(File) = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    content: Mapped[UploadFile] = mapped_column(LargeBinary, nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
 
 
 class TaskDescriptionImage(ImageMixin, Base):
@@ -196,8 +190,8 @@ class TestCase(Base):
     __tablename__ = "test_cases"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    arguments: Mapped[str] = mapped_column(String, nullable=False)  # TODO:
-    expected_result: Mapped[str] = mapped_column(String, nullable=False)  # TODO:
+    arguments: Mapped[str] = mapped_column(String, nullable=False)
+    expected_result: Mapped[str] = mapped_column(String, nullable=False)
     test_data_id: Mapped[UUID] = mapped_column(
         ForeignKey("test_data.id"), nullable=False
     )
@@ -212,7 +206,6 @@ class TasksTagsAssociation(Base):
 
     task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), primary_key=True)
     tag_id: Mapped[UUID] = mapped_column(ForeignKey("tags.id"), primary_key=True)
-    # extra_data: Mapped[Optional[str]]
     task: Mapped["Task"] = relationship(back_populates="tags")
     tag: Mapped["Tag"] = relationship(back_populates="tasks")
 
@@ -258,14 +251,13 @@ class TaskVote(VoteMixin, Base):
         CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
         CheckConstraint("stars_count <= 5", name="check_max_stars_count"),
         {},
-    )  # TODO: move to mixin??
+    )
 
 
 class SolutionVote(VoteMixin, Base):
     __tablename__ = "solution_votes"
 
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    stars_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     solution_id: Mapped[UUID] = mapped_column(
         ForeignKey("solutions.id"), nullable=False
     )
@@ -277,7 +269,7 @@ class SolutionVote(VoteMixin, Base):
         CheckConstraint("stars_count >= 0", name="check_min_stars_count"),
         CheckConstraint("stars_count <= 5", name="check_max_stars_count"),
         {},
-    )  # TODO: move to mixin?
+    )
 
 
 # #### Users ####
@@ -293,25 +285,25 @@ class User(Base):
     nickname: Mapped[str] = mapped_column(
         String, nullable=False
     )  # TODO: decide for max length
-    email: Mapped[str] = mapped_column(String)  # TODO: check if should be string
+    email: Mapped[str] = mapped_column(String)
     profile_picture: Mapped[ProfileImage] = relationship(
         back_populates="user", cascade="all, delete"
     )
     about: Mapped[str] = mapped_column(String)  # TODO: decide for max length
     join_date: Mapped[datetime] = mapped_column(
-        # default=datetime.now(), nullable=False
-        insert_default=func.utc_timestamp(),
+        default=datetime.utcnow(),
         nullable=False,
-    )  # TODO: verify
+    )
     last_login: Mapped[datetime] = mapped_column(
-        insert_default=func.utc_timestamp(),
+        # TODO: make default = join_date?
+        default=datetime.utcnow(),
         nullable=False,
     )
     task_stars_received: Mapped[int] = mapped_column(Integer, default=0)
     solution_stars_received: Mapped[int] = mapped_column(Integer, default=0)
     solutions: Mapped[List["Solution"]] = relationship(
         back_populates="author", cascade="all, delete"
-    )  # TODO: decide if after deleting user his solutions and tasks should be kept with null author
+    )
     tasks: Mapped[List["Task"]] = relationship(
         back_populates="author", cascade="all, delete"
     )
