@@ -93,8 +93,8 @@ class Solution(Base):
         nullable=False,
     )
     last_modified: Mapped[datetime] = mapped_column(
+        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
         onupdate=datetime.utcnow(),
-        # TODO: make nullable or align initial value with create_date?
         nullable=False,
     )
     content: Mapped[str] = mapped_column(String, nullable=False)
@@ -109,7 +109,7 @@ class Solution(Base):
 class DescriptionMixin(object):
     text: Mapped[str] = mapped_column(String, nullable=False)
     links: Mapped[List[str]] = mapped_column(
-        ARRAY(String)
+        ARRAY(String), default=[]
     )  # TODO: verify with real test data in db
 
 
@@ -304,6 +304,7 @@ class User(Base):
         nullable=False,
     )
     last_login: Mapped[datetime] = mapped_column(
+        # TODO: make default = join_date?
         default=datetime.utcnow(),
         nullable=False,
     )
