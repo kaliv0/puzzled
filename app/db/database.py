@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-dotenv_path = join(dirname(__file__), ".env")
+db_config_path = join(dirname(__file__), "config")
+dotenv_path = join(db_config_path, ".env")
 load_dotenv(dotenv_path)
 SQLALCHEMY_DATABASE_URL = getenv("DB_URL")
 
