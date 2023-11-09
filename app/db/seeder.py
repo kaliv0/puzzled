@@ -27,16 +27,15 @@ MODEL_IDS = {
     "task_description_image_id": uuid4(),
     "solution_description_image_id": uuid4(),
     "profile_image_id": uuid4(),
+    "test_data_id": uuid4(),
+    "test_case_id": uuid4(),
+    "tag_id": uuid4(),
+    "hint_id": uuid4(),
+    "task_vote_id": uuid4(),
+    "solution_vote_id": uuid4(),
 }
 
 INITIAL_DATA = {
-    # "profile_images": [
-    #     {
-    #         "name": "Nemo",
-    #         "content": pic,
-    #     },
-    # ],
-    ##########
     "users": [
         {
             "id": MODEL_IDS["user_id"],
@@ -60,7 +59,7 @@ INITIAL_DATA = {
     "solutions": [
         {
             "id": MODEL_IDS["solution_id"],
-            "name": "200 % faster implementation",  # TODO: remove property?
+            "name": "200 % faster implementation",
             "task_id": MODEL_IDS["task_id"],
             "author_id": MODEL_IDS["user_id"],
             "description": "Simply use + operator",
@@ -90,7 +89,7 @@ INITIAL_DATA = {
         {
             "id": MODEL_IDS["task_description_image_id"],
             "task_description_id": MODEL_IDS["task_description_id"],
-            "name": "Addition example",  # TODO: remove?
+            "name": "Addition example",
             "content": addition_example_img,
         }
     ],
@@ -98,7 +97,7 @@ INITIAL_DATA = {
         {
             "id": MODEL_IDS["solution_description_image_id"],
             "solution_description_id": MODEL_IDS["solution_description_id"],
-            "name": "Addition example",  # TODO: remove?
+            "name": "Addition example",
             "content": addition_solution_img,
         }
     ],
@@ -106,17 +105,46 @@ INITIAL_DATA = {
         {
             "id": MODEL_IDS["profile_image_id"],
             "user_id": MODEL_IDS["user_id"],
-            "name": "Addition example",  # TODO: remove?
+            "name": "Addition example",
             "content": avatar_img,
         }
     ],
-    # "test_data": [],
-    # "test_cases": [],
-    # "tags": [],
-    # "tasks_tags": [],
-    # "hints": [],
-    # "task_votes": [],
-    # "solution_votes": [],
+    "test_data": [
+        {
+            "id": MODEL_IDS["test_data_id"],
+            "task_id": MODEL_IDS["task_id"],
+        },
+    ],
+    "test_cases": [
+        {
+            "id": MODEL_IDS["test_case_id"],
+            "arguments": "[(1,2),(5,6),(10,-20)]",
+            "expected_result": "[3,11,-10]",
+            "test_data_id": MODEL_IDS["test_data_id"],
+        },
+    ],
+    "tags": [
+        {"id": MODEL_IDS["tag_id"], "text": "Math operations"},
+    ],
+    "tasks_tags": [
+        {"task_id": MODEL_IDS["task_id"], "tag_id": MODEL_IDS["tag_id"]},
+    ],
+    "hints": [{"id": MODEL_IDS["hint_id"], "task_id": MODEL_IDS["task_id"]}],
+    "task_votes": [
+        {
+            "id": MODEL_IDS["task_vote_id"],
+            "task_id": MODEL_IDS["task_id"],
+            "user_id": MODEL_IDS["user_id"],
+        }
+    ],
+    "solution_votes": [
+        {
+            "id": MODEL_IDS["solution_vote_id"],
+            "solution_id": MODEL_IDS["solution_id"],
+            "user_id": MODEL_IDS["user_id"],
+            "stars_count": 4,
+        }
+    ],
 }
 
 
