@@ -1,5 +1,5 @@
+from os.path import dirname, join
 from uuid import uuid4
-from os.path import join, dirname
 
 from app.db.database import engine
 from app.db.models import Base, DifficultyLevel, Role
