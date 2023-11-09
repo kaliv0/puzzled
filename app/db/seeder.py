@@ -4,20 +4,29 @@ from os.path import join, dirname
 from app.db.database import engine
 from app.db.models import Base, DifficultyLevel, Role
 
-# file = join(dirname(__file__), "pic.jpg")
-# file = join(dirname(__file__), "kitty.jpg")
-# pic = open(file, "rb").read()
+db_resources_path = join(dirname(__file__), "resources")
+addition_example_path = join(db_resources_path, "addition_example.gif")
+addition_example_img = open(addition_example_path, "rb").read()
+addition_solution_path = join(db_resources_path, "addition_solution.png")
+addition_solution_img = open(addition_solution_path, "rb").read()
+avatar_path = join(db_resources_path, "profile_image.jpg")
+avatar_img = open(avatar_path, "rb").read()
+
 
 SOLUTION_CONTENT = """
 def add_nums(a: int, b: int) -> int:
     return a + b
 """
+
 MODEL_IDS = {
     "user_id": uuid4(),
     "task_id": uuid4(),
     "solution_id": uuid4(),
     "task_description_id": uuid4(),
     "solution_description_id": uuid4(),
+    "task_description_image_id": uuid4(),
+    "solution_description_image_id": uuid4(),
+    "profile_image_id": uuid4(),
 }
 
 INITIAL_DATA = {
@@ -77,9 +86,30 @@ INITIAL_DATA = {
             "text": "Simply use the plus (+) sign",
         },
     ],
-    # "task_description_images": [],
-    # "solution_description_images": [],
-    # "profile_images": [],
+    "task_description_images": [
+        {
+            "id": MODEL_IDS["task_description_image_id"],
+            "task_description_id": MODEL_IDS["task_description_id"],
+            "name": "Addition example",  # TODO: remove?
+            "content": addition_example_img,
+        }
+    ],
+    "solution_description_images": [
+        {
+            "id": MODEL_IDS["solution_description_image_id"],
+            "solution_description_id": MODEL_IDS["solution_description_id"],
+            "name": "Addition example",  # TODO: remove?
+            "content": addition_solution_img,
+        }
+    ],
+    "profile_images": [
+        {
+            "id": MODEL_IDS["profile_image_id"],
+            "user_id": MODEL_IDS["user_id"],
+            "name": "Addition example",  # TODO: remove?
+            "content": avatar_img,
+        }
+    ],
     # "test_data": [],
     # "test_cases": [],
     # "tags": [],
