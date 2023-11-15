@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from uuid import UUID, uuid4
 
@@ -14,6 +14,8 @@ from sqlalchemy.sql.sqltypes import Enum, Integer, LargeBinary, String
 class Base(DeclarativeBase):
     pass
 
+
+CURRENT_DATETIME = datetime.utcnow()
 
 # #### Enums ####
 
@@ -59,12 +61,16 @@ class Task(Base):
         Enum(DifficultyLevel, name="difficulty_levels")
     )
     create_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     last_modified: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
+        default=CURRENT_DATETIME,  # TODO: make equal to create_date vs calling utcnow()
         onupdate=datetime.utcnow(),
+        nullable=False,
+    )
+    available_date: Mapped[datetime] = mapped_column(
+        default=CURRENT_DATETIME + timedelta(hours=1),
         nullable=False,
     )
     votes: Mapped[List["TaskVote"]] = relationship(
@@ -90,11 +96,11 @@ class Solution(Base):
         back_populates="solution", cascade="all, delete"
     )
     create_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     last_modified: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
+        default=CURRENT_DATETIME,  # TODO: make equal to create_date vs calling utcnow()
         onupdate=datetime.utcnow(),
         nullable=False,
     )
@@ -143,7 +149,7 @@ class ImageMixin(object):
     name: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[UploadFile] = mapped_column(LargeBinary, nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
 
@@ -274,12 +280,12 @@ class User(Base):
     )
     about: Mapped[str] = mapped_column(String)  # TODO: decide for max length
     join_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     last_login: Mapped[datetime] = mapped_column(
         # TODO: make default = join_date?
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     task_stars_received: Mapped[int] = mapped_column(Integer, default=0)

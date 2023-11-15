@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: cf29e66f6809
+Revision ID: c0c7f43c27e1
 Revises: 
-Create Date: 2023-11-15 16:14:59.576295
+Create Date: 2023-11-15 17:41:05.044451
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'cf29e66f6809'
+revision: str = 'c0c7f43c27e1'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,6 +54,7 @@ def upgrade() -> None:
     sa.Column('difficulty_level', sa.Enum('EASY', 'MEDIUM', 'HARD', name='difficulty_levels'), nullable=False),
     sa.Column('create_date', sa.DateTime(), nullable=False),
     sa.Column('last_modified', sa.DateTime(), nullable=False),
+    sa.Column('available_date', sa.DateTime(), nullable=False),
     sa.Column('author_id', sa.Uuid(), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
