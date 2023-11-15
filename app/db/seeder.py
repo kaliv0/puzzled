@@ -5,18 +5,15 @@ from app.db.database import engine
 from app.db.models import Base, DifficultyLevel, Role
 
 db_resources_path = join(dirname(__file__), "resources")
-addition_example_path = join(db_resources_path, "addition_example.gif")
-addition_example_img = open(addition_example_path, "rb").read()
-addition_solution_path = join(db_resources_path, "addition_solution.png")
-addition_solution_img = open(addition_solution_path, "rb").read()
+# addition_example_path = join(db_resources_path, "addition_example.gif")
+# addition_example_img = open(addition_example_path, "rb").read()
+# addition_solution_path = join(db_resources_path, "addition_solution.png")
+# addition_solution_img = open(addition_solution_path, "rb").read()
 avatar_path = join(db_resources_path, "profile_image.jpg")
 avatar_img = open(avatar_path, "rb").read()
 
 
-SOLUTION_CONTENT = """
-def add_nums(a: int, b: int) -> int:
-    return a + b
-"""
+SOLUTION_CONTENT = """ """
 
 MODEL_IDS = {
     "user_id": uuid4(),
@@ -27,8 +24,6 @@ MODEL_IDS = {
     "task_description_image_id": uuid4(),
     "solution_description_image_id": uuid4(),
     "profile_image_id": uuid4(),
-    "test_data_id": uuid4(),
-    "test_case_id": uuid4(),
     "tag_id": uuid4(),
     "hint_id": uuid4(),
     "task_vote_id": uuid4(),
@@ -42,27 +37,28 @@ INITIAL_DATA = {
             "full_name": "Kumar Pandu",
             "nickname": "Djangolo",
             "email": "djangolo@mail.com",
+            "password": "",  # TODO
             "about": "Happy coder",
             "task_stars_received": 0,
             "solution_stars_received": 0,
-            "role": Role.user,
+            "role": Role.USER,
         },
     ],
     "tasks": [
         {
             "id": MODEL_IDS["task_id"],
-            "name": "Add two numbers",
-            "difficulty_level": DifficultyLevel.easy,
+            "name": "",
+            "difficulty_level": DifficultyLevel.EASY,
             "author_id": MODEL_IDS["user_id"],
         }
     ],
     "solutions": [
         {
             "id": MODEL_IDS["solution_id"],
-            "name": "200 % faster implementation",
+            "name": "",
             "task_id": MODEL_IDS["task_id"],
             "author_id": MODEL_IDS["user_id"],
-            "description": "Simply use + operator",
+            "description": "",
             "content": SOLUTION_CONTENT,
             "votes": 0,
         }
@@ -71,36 +67,33 @@ INITIAL_DATA = {
         {
             "id": MODEL_IDS["task_description_id"],
             "task_id": MODEL_IDS["task_id"],
-            "text": "Write a function that adds given arguments together",
-            "links": [
-                "https://en.wikipedia.org/wiki/Addition",
-                "https://math.fandom.com/wiki/Addition",
-            ],
+            "text": "",
+            # "links": [],
         },
     ],
     "solution_descriptions": [
         {
             "id": MODEL_IDS["solution_description_id"],
             "solution_id": MODEL_IDS["solution_id"],
-            "text": "Simply use the plus (+) sign",
+            "text": "",
         },
     ],
-    "task_description_images": [
-        {
-            "id": MODEL_IDS["task_description_image_id"],
-            "task_description_id": MODEL_IDS["task_description_id"],
-            "name": "Addition example",
-            "content": addition_example_img,
-        }
-    ],
-    "solution_description_images": [
-        {
-            "id": MODEL_IDS["solution_description_image_id"],
-            "solution_description_id": MODEL_IDS["solution_description_id"],
-            "name": "Addition example",
-            "content": addition_solution_img,
-        }
-    ],
+    # "task_description_images": [
+    #     {
+    #         "id": MODEL_IDS["task_description_image_id"],
+    #         "task_description_id": MODEL_IDS["task_description_id"],
+    #         "name": "",
+    #         "content": addition_example_img,
+    #     }
+    # ],
+    # "solution_description_images": [
+    #     {
+    #         "id": MODEL_IDS["solution_description_image_id"],
+    #         "solution_description_id": MODEL_IDS["solution_description_id"],
+    #         "name": "",
+    #         "content": addition_solution_img,
+    #     }
+    # ],
     "profile_images": [
         {
             "id": MODEL_IDS["profile_image_id"],
@@ -108,20 +101,6 @@ INITIAL_DATA = {
             "name": "Addition example",
             "content": avatar_img,
         }
-    ],
-    "test_data": [
-        {
-            "id": MODEL_IDS["test_data_id"],
-            "task_id": MODEL_IDS["task_id"],
-        },
-    ],
-    "test_cases": [
-        {
-            "id": MODEL_IDS["test_case_id"],
-            "arguments": "[(1,2),(5,6),(10,-20)]",
-            "expected_result": "[3,11,-10]",
-            "test_data_id": MODEL_IDS["test_data_id"],
-        },
     ],
     "tags": [
         {"id": MODEL_IDS["tag_id"], "text": "Math operations"},

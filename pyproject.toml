@@ -1,17 +1,17 @@
 [tool.poetry]
-name = "leet-rank"
+name = "puzzled"
 version = "0.1.0"
 description = ""
 authors = ["kaliv0 <kaloyan.ivanov88@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.104.1"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 sqlalchemy = "^2.0.22"
 alembic = "^1.12.1"
-pydantic = "^2.4.2"
+pydantic = "^2.5.1"
 psycopg = "^3.1.12"
 black = "^23.10.1"
 python-dotenv = "^1.0.0"

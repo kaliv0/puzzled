@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 from uuid import UUID, uuid4
 
@@ -15,19 +15,21 @@ class Base(DeclarativeBase):
     pass
 
 
+CURRENT_DATETIME = datetime.utcnow()
+
 # #### Enums ####
 
 
 class DifficultyLevel(str, enum.Enum):
-    easy = "EASY"
-    medium = "MEDIUM"
-    hard = "HARD"
+    EASY = "EASY"
+    MEDIUM = "MEDIUM"
+    HARD = "HARD"
 
 
 class Role(str, enum.Enum):
-    user = "USER"
-    staff = "STAFF"
-    admin = "ADMIN"
+    USER = "USER"
+    STAFF = "STAFF"
+    ADMIN = "ADMIN"
 
 
 # #### Tasks ####
@@ -46,9 +48,6 @@ class Task(Base):
         back_populates="task",
         cascade="all, delete",
     )
-    test_data: Mapped["TestData"] = relationship(
-        back_populates="task", cascade="all, delete"
-    )
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
@@ -60,6 +59,19 @@ class Task(Base):
     )
     difficulty_level: Mapped[enum.Enum] = mapped_column(
         Enum(DifficultyLevel, name="difficulty_levels")
+    )
+    create_date: Mapped[datetime] = mapped_column(
+        default=CURRENT_DATETIME,
+        nullable=False,
+    )
+    last_modified: Mapped[datetime] = mapped_column(
+        default=CURRENT_DATETIME,  # TODO: make equal to create_date vs calling utcnow()
+        onupdate=datetime.utcnow(),
+        nullable=False,
+    )
+    available_date: Mapped[datetime] = mapped_column(
+        default=CURRENT_DATETIME + timedelta(hours=1),
+        nullable=False,
     )
     votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
@@ -84,11 +96,11 @@ class Solution(Base):
         back_populates="solution", cascade="all, delete"
     )
     create_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     last_modified: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
+        default=CURRENT_DATETIME,  # TODO: make equal to create_date vs calling utcnow()
         onupdate=datetime.utcnow(),
         nullable=False,
     )
@@ -137,7 +149,7 @@ class ImageMixin(object):
     name: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[UploadFile] = mapped_column(LargeBinary, nullable=False)
     upload_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
 
@@ -170,32 +182,6 @@ class ProfileImage(ImageMixin, Base):
     id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     user: Mapped["User"] = relationship(back_populates="profile_picture")
-
-
-# #### Testing ####
-
-
-class TestData(Base):
-    __tablename__ = "test_data"
-
-    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), nullable=False)
-    task: Mapped["Task"] = relationship(back_populates="test_data")
-    test_cases: Mapped[List["TestCase"]] = relationship(
-        back_populates="test_data", cascade="all, delete"
-    )
-
-
-class TestCase(Base):
-    __tablename__ = "test_cases"
-
-    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    arguments: Mapped[str] = mapped_column(String, nullable=False)
-    expected_result: Mapped[str] = mapped_column(String, nullable=False)
-    test_data_id: Mapped[UUID] = mapped_column(
-        ForeignKey("test_data.id"), nullable=False
-    )
-    test_data: Mapped["TestData"] = relationship(back_populates="test_cases")
 
 
 # #### Tags ####
@@ -285,18 +271,21 @@ class User(Base):
     nickname: Mapped[str] = mapped_column(
         String, nullable=False
     )  # TODO: decide for max length
+    # TODO: add validation for email?
     email: Mapped[str] = mapped_column(String)
+    # TODO: add hashing and validation
+    password: Mapped[str] = mapped_column(String, nullable=False)
     profile_picture: Mapped[ProfileImage] = relationship(
         back_populates="user", cascade="all, delete"
     )
     about: Mapped[str] = mapped_column(String)  # TODO: decide for max length
     join_date: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     last_login: Mapped[datetime] = mapped_column(
         # TODO: make default = join_date?
-        default=datetime.utcnow(),
+        default=CURRENT_DATETIME,
         nullable=False,
     )
     task_stars_received: Mapped[int] = mapped_column(Integer, default=0)
