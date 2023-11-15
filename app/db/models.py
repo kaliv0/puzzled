@@ -19,15 +19,15 @@ class Base(DeclarativeBase):
 
 
 class DifficultyLevel(str, enum.Enum):
-    easy = "EASY"
-    medium = "MEDIUM"
-    hard = "HARD"
+    EASY = "EASY"
+    MEDIUM = "MEDIUM"
+    HARD = "HARD"
 
 
 class Role(str, enum.Enum):
-    user = "USER"
-    staff = "STAFF"
-    admin = "ADMIN"
+    USER = "USER"
+    STAFF = "STAFF"
+    ADMIN = "ADMIN"
 
 
 # #### Tasks ####
@@ -46,9 +46,6 @@ class Task(Base):
         back_populates="task",
         cascade="all, delete",
     )
-    test_data: Mapped["TestData"] = relationship(
-        back_populates="task", cascade="all, delete"
-    )
     user_solutions: Mapped[List["Solution"]] = relationship(
         back_populates="task", cascade="all, delete"
     )
@@ -60,6 +57,15 @@ class Task(Base):
     )
     difficulty_level: Mapped[enum.Enum] = mapped_column(
         Enum(DifficultyLevel, name="difficulty_levels")
+    )
+    create_date: Mapped[datetime] = mapped_column(
+        default=datetime.utcnow(),
+        nullable=False,
+    )
+    last_modified: Mapped[datetime] = mapped_column(
+        default=datetime.utcnow(),  # TODO: make equal to create_date vs calling utcnow()
+        onupdate=datetime.utcnow(),
+        nullable=False,
     )
     votes: Mapped[List["TaskVote"]] = relationship(
         back_populates="task", cascade="all, delete"
@@ -172,32 +178,6 @@ class ProfileImage(ImageMixin, Base):
     user: Mapped["User"] = relationship(back_populates="profile_picture")
 
 
-# #### Testing ####
-
-
-class TestData(Base):
-    __tablename__ = "test_data"
-
-    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), nullable=False)
-    task: Mapped["Task"] = relationship(back_populates="test_data")
-    test_cases: Mapped[List["TestCase"]] = relationship(
-        back_populates="test_data", cascade="all, delete"
-    )
-
-
-class TestCase(Base):
-    __tablename__ = "test_cases"
-
-    id: Mapped[UUID] = mapped_column(types.Uuid, primary_key=True, default=uuid4)
-    arguments: Mapped[str] = mapped_column(String, nullable=False)
-    expected_result: Mapped[str] = mapped_column(String, nullable=False)
-    test_data_id: Mapped[UUID] = mapped_column(
-        ForeignKey("test_data.id"), nullable=False
-    )
-    test_data: Mapped["TestData"] = relationship(back_populates="test_cases")
-
-
 # #### Tags ####
 
 
@@ -285,7 +265,10 @@ class User(Base):
     nickname: Mapped[str] = mapped_column(
         String, nullable=False
     )  # TODO: decide for max length
+    # TODO: add validation for email?
     email: Mapped[str] = mapped_column(String)
+    # TODO: add hashing and validation
+    password: Mapped[str] = mapped_column(String, nullable=False)
     profile_picture: Mapped[ProfileImage] = relationship(
         back_populates="user", cascade="all, delete"
     )
